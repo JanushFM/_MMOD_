@@ -69,7 +69,7 @@ class QueuingSystem:
             current_busy_channels = self.channel.count
             current_requests_in_queue = len(self.channel.queue)
             if current_requests_in_queue > self.max_queue_request_length:
-                self.requests_rejected.append(max_queue_request_length + self.number_channels + 1)
+                self.requests_rejected.append(self.max_queue_request_length + self.number_channels + 1)
                 self.request_in_qs_time.append(0)
                 self.request_in_qw_time.append(0)
             else:
@@ -275,7 +275,6 @@ def run_test(num_channels, service_flow_rate, request_flow_rate, queue_waiting_p
 
 
 if __name__ == '__main__':
-    max_queue_request_length = 3
     run_test(num_channels=2,
              service_flow_rate=4,
              request_flow_rate=6,
@@ -288,4 +287,3 @@ if __name__ == '__main__':
              request_flow_rate=6,
              queue_waiting_param=1,
              max_queue_request_length=3)
-
