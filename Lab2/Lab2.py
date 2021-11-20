@@ -240,8 +240,22 @@ def show_test_data(num_channels,
     print('Времени пребывания в очереди (v):', queue_waiting_param)
     print('Размер очереди (m):', max_queue_request_length)
 
+def show_stationare_plots(qs, theoretical_probabilities, interval_count):
+    intervals = np.array_split(qs.queuing_and_processing_request, interval_count)
+    for i in range(1, len(intervals)):
+        intervals[i] = np.append(intervals[i], intervals[i - 1])
+    for i in range(len(theoretical_probabilities)):
+        interval_probabilities = []
+        for interval in intervals:
+            interval_probabilities.append(len(interval[interval == i]) / len(interval))
+        plt.figure(figsize=(5, 5))
+        plt.bar(range(len(interval_probabilities)), interval_probabilities)
+        plt.title(f"Probabilitiy {i}")
+        plt.axhline(y=theoretical_probabilities[i], xmin=0, xmax=len(interval_probabilities), color='red')
+        plt.show()
 
-def run_test(num_channels, service_flow_rate, request_flow_rate, queue_waiting_param, max_queue_request_length):
+def run_test(num_channels, service_flow_rate, request_flow_rate, queue_waiting_param, max_queue_request_length,
+             running_time):
     show_test_data(num_channels=num_channels,
                    service_flow_rate=service_flow_rate,
                    request_flow_rate=request_flow_rate,
@@ -255,7 +269,7 @@ def run_test(num_channels, service_flow_rate, request_flow_rate, queue_waiting_p
                                    max_queue_request_length=max_queue_request_length,
                                    env=simpy.Environment())
 
-    queuing_system.run_model(minutes=3600)
+    queuing_system.run_model(minutes=running_time)
 
     P_emp, empirical_statistics = show_empirical_probabilities(queuing_system=queuing_system,
                                                                num_channel=num_channels,
@@ -272,18 +286,21 @@ def run_test(num_channels, service_flow_rate, request_flow_rate, queue_waiting_p
     compare_empirical_and_theoretical_final_probabilities(P_emp=P_emp, P_theor=P_theor)
     compare_empirical_and_theoretical_statistics(empirical_statistics=empirical_statistics,
                                                  theoretical_statistics=theoretical_statistics)
+    show_stationare_plots(qs=queuing_system, interval_count=100, theoretical_probabilities=P_theor)
 
 
 if __name__ == '__main__':
     run_test(num_channels=2,
-             service_flow_rate=4,
-             request_flow_rate=6,
+             service_flow_rate=5,
+             request_flow_rate=10,
              queue_waiting_param=1,
-             max_queue_request_length=3)
+             max_queue_request_length=10,
+             running_time=6000)
 
     print("--------------------------------------------------------------------------")
-    run_test(num_channels=3,
-             service_flow_rate=4,
-             request_flow_rate=6,
+    run_test(num_channels=5,
+             service_flow_rate=10,
+             request_flow_rate=100,
              queue_waiting_param=1,
-             max_queue_request_length=3)
+             max_queue_request_length=10,
+             running_time=6000)
