@@ -240,7 +240,19 @@ def show_test_data(num_channels,
     print('Времени пребывания в очереди (v):', queue_waiting_param)
     print('Размер очереди (m):', max_queue_request_length)
 
-def show_stationare_plots(qs, theoretical_probabilities, interval_count):
+
+# probability i - вероятность, что при подаче новой заявки в СМО, СМО содержит (находится в очереди и обрабатывает) заявок.
+#
+# Красная черта - thoretical probability i. Финальная теоретическая вероятность.
+# Собирая эмпирические данные я сохраняю в каждый момент времени сколько заявок находятся в очереди и обрабатываются == queuing_and_processing_request.
+# Делю массив queuing_and_processing_request на interval_count частей. К примеру, если в массиве queuing_and_processing_request 6000 элементов и interval_count == 100,
+# то у меня получится 60 массивов по 600 элементов. Первый синий столбик - эмпирическая вероятность того, что на данном интеревале (из 600 элементов) при прихождении заявки
+# в СМО в СМО будет находиться i (обозначение из probability i) заявок. Вероятность находиться подсчётом сколько раз i встречается среди 600 заявок и делится на количество (600).
+# Второй столбик обозначает эмпирическую вероятность, что на данном интервале (из 1200 элементов, включая предыдущее 600)  при прохождении заявки в СМО в СМО будет находиться i заявок.
+# Вероятность находиться подсчётом сколько раз i встречается среди 1200 заявок и делится на количество (1200). и так далее.
+#
+# Последний столбик - эмпирическая вероятность того, что при поступлении новой заявки в СМО будет находится i (из probability i) заявок (в очереди + обрабатываются СМО).
+def plot_stationary_mode(qs, theoretical_probabilities, interval_count):
     intervals = np.array_split(qs.queuing_and_processing_request, interval_count)
     for i in range(1, len(intervals)):
         intervals[i] = np.append(intervals[i], intervals[i - 1])
@@ -250,11 +262,16 @@ def show_stationare_plots(qs, theoretical_probabilities, interval_count):
             interval_probabilities.append(len(interval[interval == i]) / len(interval))
         plt.figure(figsize=(5, 5))
         plt.bar(range(len(interval_probabilities)), interval_probabilities)
-        plt.title(f"Probabilitiy {i}")
+        plt.title(f"Probability {i}")
         plt.axhline(y=theoretical_probabilities[i], xmin=0, xmax=len(interval_probabilities), color='red')
         plt.show()
 
-def run_test(num_channels, service_flow_rate, request_flow_rate, queue_waiting_param, max_queue_request_length,
+
+def run_test(num_channels,
+             service_flow_rate,
+             request_flow_rate,
+             queue_waiting_param,
+             max_queue_request_length,
              running_time):
     show_test_data(num_channels=num_channels,
                    service_flow_rate=service_flow_rate,
@@ -286,7 +303,7 @@ def run_test(num_channels, service_flow_rate, request_flow_rate, queue_waiting_p
     compare_empirical_and_theoretical_final_probabilities(P_emp=P_emp, P_theor=P_theor)
     compare_empirical_and_theoretical_statistics(empirical_statistics=empirical_statistics,
                                                  theoretical_statistics=theoretical_statistics)
-    show_stationare_plots(qs=queuing_system, interval_count=100, theoretical_probabilities=P_theor)
+    plot_stationary_mode(qs=queuing_system, interval_count=100, theoretical_probabilities=P_theor)
 
 
 if __name__ == '__main__':
